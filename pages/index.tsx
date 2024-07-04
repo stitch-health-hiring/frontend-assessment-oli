@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import Head from "next/head";
 import { Patient } from "../types/patients";
+import { sortPatientsByColumn } from "./utils";
+import SortableTh from "./components/SortableTh"; // Ensure the import path is correct
+import StyledTable from "./components/Table";
+import StyledTr from "./components/Row";
 
 export async function getServerSideProps() {
   const res = await fetch("http://localhost:3000/api/patients");
@@ -17,6 +21,19 @@ type HomeProps = {
 };
 
 export default function Home({ patients }: HomeProps): JSX.Element {
+  const [sortedPatients, setSortedPatients] = useState<Patient[]>(patients);
+  const [sortedByColumn, setSortedByColumn] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (column: keyof Patient) => {
+    const order =
+      sortedByColumn === column && sortOrder === "asc" ? "desc" : "asc";
+    const sorted = sortPatientsByColumn(sortedPatients, column, order);
+    setSortedPatients(sorted);
+    setSortedByColumn(column);
+    setSortOrder(order);
+  };
+
   return (
     <>
       <Head>
@@ -29,26 +46,50 @@ export default function Home({ patients }: HomeProps): JSX.Element {
         <h1>Patients</h1>
       </header>
       <main>
-        <table>
+        <StyledTable>
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>ID</th>
-              <th>Date of birth</th>
-              <th>Registration date</th>
-            </tr>
+            <StyledTr>
+              <SortableTh
+                column="firstName"
+                label="Name"
+                sortedByColumn={sortedByColumn}
+                sortOrder={sortOrder}
+                onSort={(column) => handleSort(column as keyof Patient)}
+              />
+              <SortableTh
+                column="id"
+                label="ID"
+                sortedByColumn={sortedByColumn}
+                sortOrder={sortOrder}
+                onSort={(column) => handleSort(column as keyof Patient)}
+              />
+              <SortableTh
+                column="dateOfBirth"
+                label="Date of birth"
+                sortedByColumn={sortedByColumn}
+                sortOrder={sortOrder}
+                onSort={(column) => handleSort(column as keyof Patient)}
+              />
+              <SortableTh
+                column="dateOfRegistration"
+                label="Registration date"
+                sortedByColumn={sortedByColumn}
+                sortOrder={sortOrder}
+                onSort={(column) => handleSort(column as keyof Patient)}
+              />
+            </StyledTr>
           </thead>
           <tbody>
-            {patients.map((patient) => (
-              <tr key={patient.id}>
+            {sortedPatients.map((patient) => (
+              <StyledTr key={patient.id}>
                 <td>{`${patient.firstName} ${patient.lastName}`}</td>
                 <td>{patient.id}</td>
                 <td>{patient.dateOfBirth}</td>
                 <td>{patient.dateOfRegistration}</td>
-              </tr>
+              </StyledTr>
             ))}
           </tbody>
-        </table>
+        </StyledTable>
       </main>
     </>
   );

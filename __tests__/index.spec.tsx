@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import Home from "../pages/index";
 
@@ -74,5 +75,27 @@ test("renders value for each patient data property for each patient", () => {
     expect(idElement).toBeInTheDocument();
     expect(dateOfBirthElement).toBeInTheDocument();
     expect(dateOfRegistrationElement).toBeInTheDocument();
+  });
+});
+
+test("sorts patients by first name", () => {
+  render(<Home patients={mockPatients} />);
+  const nameHeader = screen.getByText("Name");
+
+  // Initial click to sort ascending
+  userEvent.click(nameHeader);
+  let sortedNames = mockPatients
+    .map((patient) => `${patient.firstName} ${patient.lastName}`)
+    .sort((a, b) => a.localeCompare(b));
+  sortedNames.forEach((name, index) => {
+    const row = screen.getAllByRole("row")[index + 1]; // skip header row
+    expect(row).toHaveTextContent(name);
+  });
+
+  // Second click to sort descending
+  userEvent.click(nameHeader);
+  sortedNames.reverse().forEach((name, index) => {
+    const row = screen.getAllByRole("row")[index + 1]; // skip header row
+    expect(row).toHaveTextContent(name);
   });
 });
